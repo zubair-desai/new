@@ -9,19 +9,21 @@ gem 'faker', '1.1.2'
 gem 'will_paginate', '3.0.4'
 gem 'bootstrap-will_paginate', '0.0.9'
 gem 'activeresource'
+gem 'protected_attributes'
 
 group :development, :test do
   gem 'sqlite3', '1.3.8'
   gem 'rspec-rails', '2.13.1'
   # The following optional lines are part of the advanced setup.
   # gem 'guard-rspec', '2.5.0'
-  # gem 'spork-rails', '4.0.0'
+   gem 'spork-rails', '4.0.0'
   # gem 'guard-spork', '1.5.0'
   # gem 'childprocess', '0.3.6'
   
 end
 
 group :test do
+  gem 'rspec-rails', '2.13.1'
   gem 'selenium-webdriver', '2.35.1'
   gem 'capybara', '2.1.0'
   gem 'factory_girl_rails', '4.2.0'
@@ -36,7 +38,7 @@ group :test do
 
    #Uncomment these lines on Windows.
    gem 'rb-notifu', '0.0.4'
-   gem 'win32console', '1.3.2'
+   #gem 'win32console', '1.3.2'
    gem 'wdm', '0.1.0'
 end
 
