@@ -1,3 +1,5 @@
+# => HEROKU TROUBLESHOOTING: http://stackoverflow.com/questions/12206779/git-push-heroku-master-permission-denied-publickey-fatal-the-remote-end-hung
+
 require 'spec_helper'
 
 describe "StaticPages" do
@@ -24,6 +26,9 @@ subject { page }
 
 
 end
+
+
+
 
 
 
