@@ -19,5 +19,5 @@ production:
    encoding: unicode
    database: d39o800311h62b
    pool: 5
-   username: fkdkqbbfvqnglm
-   password: rtBAcBZx7nIc88uj4rohWycIHW
+   username: db_user
+   password: db_pass
