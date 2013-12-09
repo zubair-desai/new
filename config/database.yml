@@ -1,10 +1,10 @@
 development:
    adapter: postgresql
    encoding: unicode
-   database: d39o800311h62b
+   database: my_app_production
    pool: 5
-   username: fkdkqbbfvqnglm
-   password: rtBAcBZx7nIc88uj4rohWycIHW
+   username: postgres
+   password: wahwah
 
 test:
    adapter: postgresql
@@ -17,7 +17,7 @@ test:
 production:
    adapter: postgresql
    encoding: unicode
-   database: my_app_production
+   database: d39o800311h62b
    pool: 5
-   username: postgres
-   password: wahwah
+   username: fkdkqbbfvqnglm
+   password: rtBAcBZx7nIc88uj4rohWycIHW
