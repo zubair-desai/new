@@ -13,7 +13,8 @@ gem 'protected_attributes'
 gem 'heroku'
 
 group :development, :test do
-  gem 'sqlite3', '1.3.8'
+  # => gem 'sqlite3', '1.3.8' - FOR HEROKU COMPATIBILITY
+  gem 'pg', '0.17.0'
   gem 'rspec-rails', '2.13.1'
   # The following optional lines are part of the advanced setup.
   # gem 'guard-rspec', '2.5.0'
