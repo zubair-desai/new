@@ -15,4 +15,4 @@
 /tmp
 
 #ignore database sensitive info
-/config/database.yml
+database.yml
