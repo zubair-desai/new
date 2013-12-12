@@ -3,28 +3,31 @@
 require 'spec_helper'
 
 describe "StaticPages" do
-subject { page }
+	subject { page }
 
-  describe "Home Page" do
+  	describe "Home Page" do
 	  	before { visit "/static_pages/home" }
 	  	it { should have_content('Sample App') }
 	  	it { should have_title("Ruby on Rails Sample App | Home")}
-  end
+  	end
     
-  describe "Help Page" do
+  	describe "Help Page" do
 	  	before { visit "/static_pages/help" }
 	  	it { should have_content('Help') }
 	  	it { should have_title("Ruby on Rails Sample App | Help")}
-  end
+  	end
 
-  describe "About Page" do
+  	describe "About Page" do
 		before { visit "/static_pages/about" }
 		it { should have_content("About") }
 		it { should have_title("Ruby on Rails Sample App | About")}
-  end	
+  	end	
 
-
-
+  	describe "Contact Page" do
+	  	before { visit "/static_pages/contact" }
+	  	it { should have_content("Contact")}
+	  	it { should have_title("Ruby on Rails Sample App | Contact")}
+  	end
 end
 
 
