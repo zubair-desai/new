@@ -8,7 +8,8 @@ describe "StaticPages" do
   	describe "Home Page" do
 	  	before { visit "/static_pages/home" }
 	  	it { should have_content('Sample App') }
-	  	it { should have_title("Ruby on Rails Sample App | Home")}
+	  	it { should have_title("Ruby on Rails Sample App")}
+	  	it { should_not have_title("| Home")}
   	end
     
   	describe "Help Page" do
