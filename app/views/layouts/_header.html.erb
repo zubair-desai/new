@@ -1,14 +1,16 @@
-<header class="navbar navbar-fixed-top navbar-inverse">
-	<div class="navbar-inner">
-		<div class="containter center">
-			<%= link_to "sample app", "#", id: "logo" %>
-			<nav>
-				<ul class="nav nav-tabs pull-right">
-					<li> <%= link_to "Home", root_path %> </li>
-					<li> <%= link_to "Help", help_path %> </li>
-					<li> <%= link_to "Sign in", "#" %> </li>
-				</ul>
+<!-- navbar navbar-fixed-top navbar-inverse -->
+<header>
+	<div class= "col-md-8">
+			<nav class="navbar navbar-default" role="navigation">
+				<%= link_to "sample app", root_path , id: "logo" %>
+				<div class="navbar-header pull-right">
+					<ul class="nav nav-pills pull-right">
+						<li> <%= link_to "Home", root_path %> </li>
+						<li> <%= link_to "Help", help_path %> </li>
+						<li> <%= link_to "Sign in", "#" %> </li>
+					</ul>
+				</div>
 			</nav>
-		</div>
+		
 	</div>
 </header>
