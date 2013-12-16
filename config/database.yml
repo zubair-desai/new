@@ -6,7 +6,7 @@ development:
    username: postgres
    password: wahwah
 
-test:
+test: &test
    adapter: postgresql
    encoding: unicode
    database: my_app_test
@@ -21,3 +21,5 @@ production:
    pool: 5
    username: db_user
    password: db_pass
+cucumber:
+  <<: *test
