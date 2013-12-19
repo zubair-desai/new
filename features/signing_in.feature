@@ -17,5 +17,5 @@ Scenario: Signing out
 	Given a user visits the signin page
 	And the user has an account
 	And they submit valid signin information
-	When click the signout link
+	When they click the signout link
 	Then they should see a signin link

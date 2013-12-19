@@ -6,7 +6,7 @@ end
 
 def create
     user = User.find_by(email: params[:session][:email].downcase)
-    if user && user.authenticate(params[:session][:password])
+    if user && user.authenticate(params[:session][:password]) # => if correct User(email) AND correct password
       sign_in user  # =>  see sessions helper
       redirect_to user 
     else
