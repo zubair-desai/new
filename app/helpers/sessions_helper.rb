@@ -17,7 +17,6 @@ module SessionsHelper
     !current_user.nil?
   end
 
-
   def current_user=(user)
     @current_user = user
   end
@@ -33,10 +32,23 @@ module SessionsHelper
     @current_user ||= User.find_by(remember_token: remember_token) 
   end
 
+  def current_user?(user) # => this is used in making sure current user is the same as the user requested to be edited/updated (Chapter 9)
+    user == current_user
+  end
 
   def sign_out
     self.current_user = nil # => Not necessary because it redirects to destroy, but would be if it did not redirect. 
     cookies.delete(:remember_token)  
   end
 
+  #friendly forwarding code - 
+  #(redirects to desired page after application sends log-in request to user, and user logs in)
+  def redirect_back_or(default) #Hartls funky method name
+    redirect_to(session[:return_to] || default)
+    session.delete(:return_to)
+  end
+
+  def store_location  # => a.k.a. store_location
+    session[:return_to] = request.url if request.get?  #request is a special object that gets the URL of the requested page.
+  end
 end

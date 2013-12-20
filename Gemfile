@@ -13,6 +13,7 @@ gem 'bootstrap-will_paginate', '0.0.9'
 gem 'activeresource'
 gem 'protected_attributes'
 gem 'heroku'
+gem 'will_paginate-bootstrap'
 
 group :development, :test do
   # => gem 'sqlite3', '1.3.8' - FOR HEROKU COMPATIBILITY
