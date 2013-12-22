@@ -51,4 +51,13 @@ module SessionsHelper
   def store_location  # => a.k.a. store_location
     session[:return_to] = request.url if request.get?  #request is a special object that gets the URL of the requested page.
   end
+
+  # => used to be in Users_controller, but now we're using it for Microposts_controller too
+  def signed_in_user
+    unless signed_in?
+      store_location
+      redirect_to signin_path, notice: "Please sign in."
+    end
+  end
+
 end

@@ -1,7 +1,7 @@
 class UsersController < ApplicationController
 
   # => Must Sign in before you can visit page Edit or use Update action 
-  before_action :signed_in_user, only: [:edit, :update, :index]  # => special signed_in_user method is created below
+  before_action :signed_in_user, only: [:edit, :update, :index, :destroy]  # => special signed_in_user method is created below
   before_action :correct_user,   only: [:edit, :update] # => Also eliminates the need for edit method code
   before_action :admin_user,     only: :destroy
 
@@ -11,6 +11,7 @@ class UsersController < ApplicationController
 
   def show
   	@user = User.find(params[:id])
+    @microposts = @user.microposts.paginate(page: params[:page], per_page: 10)
   end
 
   def new
@@ -55,13 +56,6 @@ private
 	end
 
   #Before Filters
-
-  def signed_in_user
-    unless signed_in?
-      store_location
-      redirect_to signin_url, notice: "Please sign in."
-    end
-  end
 
   def correct_user 
     @user = User.find(params[:id])

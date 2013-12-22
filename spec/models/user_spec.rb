@@ -14,6 +14,23 @@ describe User do
   it { should respond_to(:admin) }
   it { should_not be_admin }
   it { should be_valid }
+
+  it { should respond_to(:microposts) } #from micropost controller
+
+  it { should respond_to(:feed)}
+
+
+	describe "accessible attributes admin" do # => uses shoulda gem
+
+		it { should_not allow_mass_assignment_of(:admin) } 
+	end
+
+	describe "accessible attributes that are allowed" do # => uses shoulda gem
+		it { should allow_mass_assignment_of(:name) } 
+		it { should allow_mass_assignment_of(:email) } 
+		it { should allow_mass_assignment_of(:password) } 
+		it { should allow_mass_assignment_of(:password_confirmation) } 
+	end
 	  
 	describe "with admin attribute set to 'true'" do
 	    before do
@@ -105,4 +122,38 @@ describe User do
 	    before { @user.save }
 	    its(:remember_token) { should_not be_blank }   # =>  its is an attribute of an it, in this case @user
   	end
+
+  	describe "micropost associations" do
+
+  		before {@user.save} #on top of this page, user.new is not saved, so it has no ID, until now
+  		let!(:older_micropost) do
+  			FactoryGirl.create(:micropost, user: @user, created_at: 1.day.ago)
+  		end
+
+  		let!(:newer_micropost) do
+  			FactoryGirl.create(:micropost, user: @user, created_at: 1.hour.ago)
+  		end
+
+  		it "should have the right micropost in the right order" do
+  			@user.microposts.should == [newer_micropost, older_micropost] #user.microposts is an array, so this compared that array
+  		end
+
+  		it "should destroy associated microposts" do
+  			microposts = @user.microposts
+  			@user.destroy
+  			microposts.each do |micropost|
+  				Micropost.find_by_id(micropost.id).should be_nil
+  			end
+  		end
+
+  		describe "status" do
+  			let(:unfollowed_post) do # => the post of a user that is not being followed
+  			 FactoryGirl.create(:micropost, user: FactoryGirl.create(:user)) 
+  			end
+
+  			its(:feed) { should include(older_micropost)}
+  			its(:feed) { should include(newer_micropost)}
+  			its(:feed) { should_not include(unfollowed_post)}
+		end
+	end
 end

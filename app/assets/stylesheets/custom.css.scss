@@ -2,10 +2,9 @@
 
 $lightGray: #999;
 $grayLighter: #f1f1f1;
+$grayLight: #949494;
 
 // Fixes
-
-
 
 div .normal {
   margin: 50px;
@@ -213,10 +212,34 @@ background-color: #EEB4B4;
 }
 
 
+/* microposts */
 
 
+.microposts {
+  list-style: none;
+  margin: 10px 0 0 0;
 
-
+  li {
+    padding: 10px 0;
+    border-top: 1px solid #e8e8e8;
+  }
+}
+.content {
+  display: block;
+}
+.timestamp {
+  color: $grayLight;
+}
+.gravatar {
+  float: left;
+  margin-right: 10px;
+}
+aside {
+  textarea {
+    height: 100px;
+    margin-bottom: 5px;
+  }
+}
 
 //Test
 @media (min-width: 992px) {
