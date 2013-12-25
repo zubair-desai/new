@@ -1,28 +1,28 @@
 <%= provide(:title, "Sign Up") %>
-<h1>Sign Up</h1>
+	<div class="row-fluid">
+		<div class="col-md-4 col-md-offset-4">
+			<h1>Sign Up</h1>
+			<%= form_for(@user) do |f| %>
+				<%= render 'shared/error_messages', zubairobject: @user %>
+				<%= f.label :name %>
+				<%= f.text_field :name %>
 
 
-	<div class="col-md-6" >
-		<%= form_for(@user) do |f| %>
-			<%= render 'shared/error_messages', zubairobject: @user %>
-			<%= f.label :name %>
-			<%= f.text_field :name %>
+				<%= f.label :email %>
+				<%= f.text_field :email %>
 
 
-			<%= f.label :email %>
-			<%= f.text_field :email %>
+				<%= f.label :password %>
+				<%= f.password_field :password %>
 
 
-			<%= f.label :password %>
-			<%= f.password_field :password %>
+				<%= f.label :password_confirmation, "Confirmation" %> <br/>
+				<%= f.password_field :password_confirmation %> <br/><br/>
 
+				<%= f.submit "Create my account", class: "btn btn-large btn-primary" %>
 
-			<%= f.label :password_confirmation, "Confirmation" %> <br/>
-			<%= f.password_field :password_confirmation %> <br/><br/>
-
-			<%= f.submit "Create my account", class: "btn btn-large btn-primary" %>
-
-		<% end %>
+			<% end %>
+		</div>
 	</div>
 
 

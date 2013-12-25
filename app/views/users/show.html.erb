@@ -1,27 +1,34 @@
 <% provide(:title, @user.name) %>
 
-<div class="row">
-  <aside class="span4">
-    <section>
-      <h1>
-        <%= gravatar_for @user %>
-        <%= @user.name %>
-      </h1>
-    </section>
-  </aside>
+<div class="row-fluid">
+    <div class="col-md-4 col-md-offset-4">
+    <aside class="span4">
+      <section>
+        <h1>
+          <%= gravatar_for @user %>
+          <%= @user.name %>
+        </h1>
+      </section>
+      <section>
+        <%= render 'shared/stats' %>
+      </section>
+    </aside>  
 
-  <div class="span8">
+    <div class="span8">
+      <section>
+        <%= render 'follow_form' if signed_in? %>
+      </section>
 
-	  	<% if @user.microposts.any? %>
-	  		<h3>Microposts (<%= @user.microposts.count  %>)</h3>
-	  	<% end %>
+  	  	<% if @user.microposts.any? %>
+  	  		<h3>Microposts (<%= @user.microposts.count  %>)</h3>
+  	  	<% end %>
 
 
-	  	<ol class="microposts">
-	  		<%= render @microposts %> 
-	  	</ol>
-	  <%= will_paginate @microposts, renderer: BootstrapPagination::Rails %>
+  	  	<ol class="microposts">
+  	  		<%= render @microposts %> 
+  	  	</ol>
+  	  <%= will_paginate @microposts, renderer: BootstrapPagination::Rails %>
+    </div>
   </div>
-
 </div>
 

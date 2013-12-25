@@ -10182,411 +10182,9 @@ if ( typeof module === "object" && module && typeof module.exports === "object" 
   }
 
 })( jQuery );
-(function() {
-  var CSRFToken, anchoredLink, assetsChanged, browserCompatibleDocumentParser, browserIsntBuggy, browserSupportsPushState, cacheCurrentPage, changePage, constrainPageCacheTo, createDocument, crossOriginLink, currentState, executeScriptTags, extractLink, extractTitleAndBody, extractTrackAssets, fetchHistory, fetchReplacement, handleClick, ignoreClick, initializeTurbolinks, initialized, installClickHandlerLast, intersection, invalidContent, loadedAssets, noTurbolink, nonHtmlLink, nonStandardClick, pageCache, recallScrollPosition, referer, reflectNewUrl, reflectRedirectedUrl, rememberCurrentState, rememberCurrentUrl, rememberInitialPage, removeHash, removeNoscriptTags, requestMethod, requestMethodIsSafe, resetScrollPosition, targetLink, triggerEvent, visit, xhr, _ref,
-    __hasProp = {}.hasOwnProperty,
-    __indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
-
-  initialized = false;
-
-  currentState = null;
-
-  referer = document.location.href;
-
-  loadedAssets = null;
-
-  pageCache = {};
-
-  createDocument = null;
-
-  requestMethod = ((_ref = document.cookie.match(/request_method=(\w+)/)) != null ? _ref[1].toUpperCase() : void 0) || '';
-
-  xhr = null;
-
-  visit = function(url) {
-    if (browserSupportsPushState && browserIsntBuggy) {
-      cacheCurrentPage();
-      reflectNewUrl(url);
-      return fetchReplacement(url);
-    } else {
-      return document.location.href = url;
-    }
-  };
-
-  fetchReplacement = function(url) {
-    var safeUrl,
-      _this = this;
-    triggerEvent('page:fetch');
-    safeUrl = removeHash(url);
-    if (xhr != null) {
-      xhr.abort();
-    }
-    xhr = new XMLHttpRequest;
-    xhr.open('GET', safeUrl, true);
-    xhr.setRequestHeader('Accept', 'text/html, application/xhtml+xml, application/xml');
-    xhr.setRequestHeader('X-XHR-Referer', referer);
-    xhr.onload = function() {
-      var doc;
-      triggerEvent('page:receive');
-      if (invalidContent(xhr) || assetsChanged((doc = createDocument(xhr.responseText)))) {
-        return document.location.reload();
-      } else {
-        changePage.apply(null, extractTitleAndBody(doc));
-        reflectRedirectedUrl(xhr);
-        if (document.location.hash) {
-          document.location.href = document.location.href;
-        } else {
-          resetScrollPosition();
-        }
-        return triggerEvent('page:load');
-      }
-    };
-    xhr.onloadend = function() {
-      return xhr = null;
-    };
-    xhr.onabort = function() {
-      return rememberCurrentUrl();
-    };
-    xhr.onerror = function() {
-      return document.location.href = url;
-    };
-    return xhr.send();
-  };
-
-  fetchHistory = function(state) {
-    var page;
-    cacheCurrentPage();
-    if (page = pageCache[state.position]) {
-      if (xhr != null) {
-        xhr.abort();
-      }
-      changePage(page.title, page.body);
-      recallScrollPosition(page);
-      return triggerEvent('page:restore');
-    } else {
-      return fetchReplacement(document.location.href);
-    }
-  };
-
-  cacheCurrentPage = function() {
-    rememberInitialPage();
-    pageCache[currentState.position] = {
-      url: document.location.href,
-      body: document.body,
-      title: document.title,
-      positionY: window.pageYOffset,
-      positionX: window.pageXOffset
-    };
-    return constrainPageCacheTo(10);
-  };
-
-  constrainPageCacheTo = function(limit) {
-    var key, value;
-    for (key in pageCache) {
-      if (!__hasProp.call(pageCache, key)) continue;
-      value = pageCache[key];
-      if (key <= currentState.position - limit) {
-        pageCache[key] = null;
-      }
-    }
-  };
-
-  changePage = function(title, body, csrfToken, runScripts) {
-    document.title = title;
-    document.documentElement.replaceChild(body, document.body);
-    if (csrfToken != null) {
-      CSRFToken.update(csrfToken);
-    }
-    removeNoscriptTags();
-    if (runScripts) {
-      executeScriptTags();
-    }
-    currentState = window.history.state;
-    return triggerEvent('page:change');
-  };
-
-  executeScriptTags = function() {
-    var attr, copy, nextSibling, parentNode, script, scripts, _i, _j, _len, _len1, _ref1, _ref2;
-    scripts = Array.prototype.slice.call(document.body.getElementsByTagName('script'));
-    for (_i = 0, _len = scripts.length; _i < _len; _i++) {
-      script = scripts[_i];
-      if (!((_ref1 = script.type) === '' || _ref1 === 'text/javascript')) {
-        continue;
-      }
-      copy = document.createElement('script');
-      _ref2 = script.attributes;
-      for (_j = 0, _len1 = _ref2.length; _j < _len1; _j++) {
-        attr = _ref2[_j];
-        copy.setAttribute(attr.name, attr.value);
-      }
-      copy.appendChild(document.createTextNode(script.innerHTML));
-      parentNode = script.parentNode, nextSibling = script.nextSibling;
-      parentNode.removeChild(script);
-      parentNode.insertBefore(copy, nextSibling);
-    }
-  };
-
-  removeNoscriptTags = function() {
-    var noscript, noscriptTags, _i, _len;
-    noscriptTags = Array.prototype.slice.call(document.body.getElementsByTagName('noscript'));
-    for (_i = 0, _len = noscriptTags.length; _i < _len; _i++) {
-      noscript = noscriptTags[_i];
-      noscript.parentNode.removeChild(noscript);
-    }
-  };
-
-  reflectNewUrl = function(url) {
-    if (url !== document.location.href) {
-      referer = document.location.href;
-      return window.history.pushState({
-        turbolinks: true,
-        position: currentState.position + 1
-      }, '', url);
-    }
-  };
-
-  reflectRedirectedUrl = function(xhr) {
-    var location;
-    if ((location = xhr.getResponseHeader('X-XHR-Current-Location')) && location !== document.location.pathname + document.location.search) {
-      return window.history.replaceState(currentState, '', location + document.location.hash);
-    }
-  };
-
-  rememberCurrentUrl = function() {
-    return window.history.replaceState({
-      turbolinks: true,
-      position: Date.now()
-    }, '', document.location.href);
-  };
-
-  rememberCurrentState = function() {
-    return currentState = window.history.state;
-  };
-
-  rememberInitialPage = function() {
-    if (!initialized) {
-      rememberCurrentUrl();
-      rememberCurrentState();
-      createDocument = browserCompatibleDocumentParser();
-      return initialized = true;
-    }
-  };
-
-  recallScrollPosition = function(page) {
-    return window.scrollTo(page.positionX, page.positionY);
-  };
-
-  resetScrollPosition = function() {
-    return window.scrollTo(0, 0);
-  };
-
-  removeHash = function(url) {
-    var link;
-    link = url;
-    if (url.href == null) {
-      link = document.createElement('A');
-      link.href = url;
-    }
-    return link.href.replace(link.hash, '');
-  };
-
-  triggerEvent = function(name) {
-    var event;
-    event = document.createEvent('Events');
-    event.initEvent(name, true, true);
-    return document.dispatchEvent(event);
-  };
-
-  invalidContent = function(xhr) {
-    return !xhr.getResponseHeader('Content-Type').match(/^(?:text\/html|application\/xhtml\+xml|application\/xml)(?:;|$)/);
-  };
-
-  extractTrackAssets = function(doc) {
-    var node, _i, _len, _ref1, _results;
-    _ref1 = doc.head.childNodes;
-    _results = [];
-    for (_i = 0, _len = _ref1.length; _i < _len; _i++) {
-      node = _ref1[_i];
-      if ((typeof node.getAttribute === "function" ? node.getAttribute('data-turbolinks-track') : void 0) != null) {
-        _results.push(node.src || node.href);
-      }
-    }
-    return _results;
-  };
-
-  assetsChanged = function(doc) {
-    var fetchedAssets;
-    loadedAssets || (loadedAssets = extractTrackAssets(document));
-    fetchedAssets = extractTrackAssets(doc);
-    return fetchedAssets.length !== loadedAssets.length || intersection(fetchedAssets, loadedAssets).length !== loadedAssets.length;
-  };
-
-  intersection = function(a, b) {
-    var value, _i, _len, _ref1, _results;
-    if (a.length > b.length) {
-      _ref1 = [b, a], a = _ref1[0], b = _ref1[1];
-    }
-    _results = [];
-    for (_i = 0, _len = a.length; _i < _len; _i++) {
-      value = a[_i];
-      if (__indexOf.call(b, value) >= 0) {
-        _results.push(value);
-      }
-    }
-    return _results;
-  };
-
-  extractTitleAndBody = function(doc) {
-    var title;
-    title = doc.querySelector('title');
-    return [title != null ? title.textContent : void 0, doc.body, CSRFToken.get(doc).token, 'runScripts'];
-  };
-
-  CSRFToken = {
-    get: function(doc) {
-      var tag;
-      if (doc == null) {
-        doc = document;
-      }
-      return {
-        node: tag = doc.querySelector('meta[name="csrf-token"]'),
-        token: tag != null ? typeof tag.getAttribute === "function" ? tag.getAttribute('content') : void 0 : void 0
-      };
-    },
-    update: function(latest) {
-      var current;
-      current = this.get();
-      if ((current.token != null) && (latest != null) && current.token !== latest) {
-        return current.node.setAttribute('content', latest);
-      }
-    }
-  };
-
-  browserCompatibleDocumentParser = function() {
-    var createDocumentUsingDOM, createDocumentUsingParser, createDocumentUsingWrite, e, testDoc, _ref1;
-    createDocumentUsingParser = function(html) {
-      return (new DOMParser).parseFromString(html, 'text/html');
-    };
-    createDocumentUsingDOM = function(html) {
-      var doc;
-      doc = document.implementation.createHTMLDocument('');
-      doc.documentElement.innerHTML = html;
-      return doc;
-    };
-    createDocumentUsingWrite = function(html) {
-      var doc;
-      doc = document.implementation.createHTMLDocument('');
-      doc.open('replace');
-      doc.write(html);
-      doc.close();
-      return doc;
-    };
-    try {
-      if (window.DOMParser) {
-        testDoc = createDocumentUsingParser('<html><body><p>test');
-        return createDocumentUsingParser;
-      }
-    } catch (_error) {
-      e = _error;
-      testDoc = createDocumentUsingDOM('<html><body><p>test');
-      return createDocumentUsingDOM;
-    } finally {
-      if ((testDoc != null ? (_ref1 = testDoc.body) != null ? _ref1.childNodes.length : void 0 : void 0) !== 1) {
-        return createDocumentUsingWrite;
-      }
-    }
-  };
-
-  installClickHandlerLast = function(event) {
-    if (!event.defaultPrevented) {
-      document.removeEventListener('click', handleClick, false);
-      return document.addEventListener('click', handleClick, false);
-    }
-  };
-
-  handleClick = function(event) {
-    var link;
-    if (!event.defaultPrevented) {
-      link = extractLink(event);
-      if (link.nodeName === 'A' && !ignoreClick(event, link)) {
-        visit(link.href);
-        return event.preventDefault();
-      }
-    }
-  };
-
-  extractLink = function(event) {
-    var link;
-    link = event.target;
-    while (!(!link.parentNode || link.nodeName === 'A')) {
-      link = link.parentNode;
-    }
-    return link;
-  };
-
-  crossOriginLink = function(link) {
-    return location.protocol !== link.protocol || location.host !== link.host;
-  };
-
-  anchoredLink = function(link) {
-    return ((link.hash && removeHash(link)) === removeHash(location)) || (link.href === location.href + '#');
-  };
-
-  nonHtmlLink = function(link) {
-    var url;
-    url = removeHash(link);
-    return url.match(/\.[a-z]+(\?.*)?$/g) && !url.match(/\.html?(\?.*)?$/g);
-  };
-
-  noTurbolink = function(link) {
-    var ignore;
-    while (!(ignore || link === document)) {
-      ignore = link.getAttribute('data-no-turbolink') != null;
-      link = link.parentNode;
-    }
-    return ignore;
-  };
-
-  targetLink = function(link) {
-    return link.target.length !== 0;
-  };
-
-  nonStandardClick = function(event) {
-    return event.which > 1 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey;
-  };
-
-  ignoreClick = function(event, link) {
-    return crossOriginLink(link) || anchoredLink(link) || nonHtmlLink(link) || noTurbolink(link) || targetLink(link) || nonStandardClick(event);
-  };
-
-  initializeTurbolinks = function() {
-    document.addEventListener('click', installClickHandlerLast, true);
-    return window.addEventListener('popstate', function(event) {
-      var _ref1;
-      if ((_ref1 = event.state) != null ? _ref1.turbolinks : void 0) {
-        return fetchHistory(event.state);
-      }
-    }, false);
-  };
-
-  browserSupportsPushState = window.history && window.history.pushState && window.history.replaceState && window.history.state !== void 0;
-
-  browserIsntBuggy = !navigator.userAgent.match(/CriOS\//);
-
-  requestMethodIsSafe = requestMethod === 'GET' || requestMethod === '';
-
-  if (browserSupportsPushState && browserIsntBuggy && requestMethodIsSafe) {
-    initializeTurbolinks();
-  }
-
-  this.Turbolinks = {
-    visit: visit
-  };
-
-}).call(this);
 /* ========================================================================
- * Bootstrap: affix.js v3.0.3
- * http://getbootstrap.com/javascript/#affix
+ * Bootstrap: transition.js v3.0.3
+ * http://getbootstrap.com/javascript/#transitions
  * ========================================================================
  * Copyright 2013 Twitter, Inc.
  *
@@ -10607,107 +10205,37 @@ if ( typeof module === "object" && module && typeof module.exports === "object" 
 
 +function ($) { "use strict";
 
-  // AFFIX CLASS DEFINITION
-  // ======================
+  // CSS TRANSITION SUPPORT (Shoutout: http://www.modernizr.com/)
+  // ============================================================
 
-  var Affix = function (element, options) {
-    this.options = $.extend({}, Affix.DEFAULTS, options)
-    this.$window = $(window)
-      .on('scroll.bs.affix.data-api', $.proxy(this.checkPosition, this))
-      .on('click.bs.affix.data-api',  $.proxy(this.checkPositionWithEventLoop, this))
+  function transitionEnd() {
+    var el = document.createElement('bootstrap')
 
-    this.$element = $(element)
-    this.affixed  =
-    this.unpin    = null
+    var transEndEventNames = {
+      'WebkitTransition' : 'webkitTransitionEnd'
+    , 'MozTransition'    : 'transitionend'
+    , 'OTransition'      : 'oTransitionEnd otransitionend'
+    , 'transition'       : 'transitionend'
+    }
 
-    this.checkPosition()
-  }
-
-  Affix.RESET = 'affix affix-top affix-bottom'
-
-  Affix.DEFAULTS = {
-    offset: 0
-  }
-
-  Affix.prototype.checkPositionWithEventLoop = function () {
-    setTimeout($.proxy(this.checkPosition, this), 1)
-  }
-
-  Affix.prototype.checkPosition = function () {
-    if (!this.$element.is(':visible')) return
-
-    var scrollHeight = $(document).height()
-    var scrollTop    = this.$window.scrollTop()
-    var position     = this.$element.offset()
-    var offset       = this.options.offset
-    var offsetTop    = offset.top
-    var offsetBottom = offset.bottom
-
-    if (typeof offset != 'object')         offsetBottom = offsetTop = offset
-    if (typeof offsetTop == 'function')    offsetTop    = offset.top()
-    if (typeof offsetBottom == 'function') offsetBottom = offset.bottom()
-
-    var affix = this.unpin   != null && (scrollTop + this.unpin <= position.top) ? false :
-                offsetBottom != null && (position.top + this.$element.height() >= scrollHeight - offsetBottom) ? 'bottom' :
-                offsetTop    != null && (scrollTop <= offsetTop) ? 'top' : false
-
-    if (this.affixed === affix) return
-    if (this.unpin) this.$element.css('top', '')
-
-    this.affixed = affix
-    this.unpin   = affix == 'bottom' ? position.top - scrollTop : null
-
-    this.$element.removeClass(Affix.RESET).addClass('affix' + (affix ? '-' + affix : ''))
-
-    if (affix == 'bottom') {
-      this.$element.offset({ top: document.body.offsetHeight - offsetBottom - this.$element.height() })
+    for (var name in transEndEventNames) {
+      if (el.style[name] !== undefined) {
+        return { end: transEndEventNames[name] }
+      }
     }
   }
 
-
-  // AFFIX PLUGIN DEFINITION
-  // =======================
-
-  var old = $.fn.affix
-
-  $.fn.affix = function (option) {
-    return this.each(function () {
-      var $this   = $(this)
-      var data    = $this.data('bs.affix')
-      var options = typeof option == 'object' && option
-
-      if (!data) $this.data('bs.affix', (data = new Affix(this, options)))
-      if (typeof option == 'string') data[option]()
-    })
-  }
-
-  $.fn.affix.Constructor = Affix
-
-
-  // AFFIX NO CONFLICT
-  // =================
-
-  $.fn.affix.noConflict = function () {
-    $.fn.affix = old
+  // http://blog.alexmaccaw.com/css-transitions
+  $.fn.emulateTransitionEnd = function (duration) {
+    var called = false, $el = this
+    $(this).one($.support.transition.end, function () { called = true })
+    var callback = function () { if (!called) $($el).trigger($.support.transition.end) }
+    setTimeout(callback, duration)
     return this
   }
 
-
-  // AFFIX DATA-API
-  // ==============
-
-  $(window).on('load', function () {
-    $('[data-spy="affix"]').each(function () {
-      var $spy = $(this)
-      var data = $spy.data()
-
-      data.offset = data.offset || {}
-
-      if (data.offsetBottom) data.offset.bottom = data.offsetBottom
-      if (data.offsetTop)    data.offset.top    = data.offsetTop
-
-      $spy.affix(data)
-    })
+  $(function () {
+    $.support.transition = transitionEnd()
   })
 
 }(jQuery);
@@ -11480,358 +11008,6 @@ if ( typeof module === "object" && module && typeof module.exports === "object" 
 
 }(jQuery);
 /* ========================================================================
- * Bootstrap: tab.js v3.0.3
- * http://getbootstrap.com/javascript/#tabs
- * ========================================================================
- * Copyright 2013 Twitter, Inc.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- * http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- * ======================================================================== */
-
-
-
-+function ($) { "use strict";
-
-  // TAB CLASS DEFINITION
-  // ====================
-
-  var Tab = function (element) {
-    this.element = $(element)
-  }
-
-  Tab.prototype.show = function () {
-    var $this    = this.element
-    var $ul      = $this.closest('ul:not(.dropdown-menu)')
-    var selector = $this.data('target')
-
-    if (!selector) {
-      selector = $this.attr('href')
-      selector = selector && selector.replace(/.*(?=#[^\s]*$)/, '') //strip for ie7
-    }
-
-    if ($this.parent('li').hasClass('active')) return
-
-    var previous = $ul.find('.active:last a')[0]
-    var e        = $.Event('show.bs.tab', {
-      relatedTarget: previous
-    })
-
-    $this.trigger(e)
-
-    if (e.isDefaultPrevented()) return
-
-    var $target = $(selector)
-
-    this.activate($this.parent('li'), $ul)
-    this.activate($target, $target.parent(), function () {
-      $this.trigger({
-        type: 'shown.bs.tab'
-      , relatedTarget: previous
-      })
-    })
-  }
-
-  Tab.prototype.activate = function (element, container, callback) {
-    var $active    = container.find('> .active')
-    var transition = callback
-      && $.support.transition
-      && $active.hasClass('fade')
-
-    function next() {
-      $active
-        .removeClass('active')
-        .find('> .dropdown-menu > .active')
-        .removeClass('active')
-
-      element.addClass('active')
-
-      if (transition) {
-        element[0].offsetWidth // reflow for transition
-        element.addClass('in')
-      } else {
-        element.removeClass('fade')
-      }
-
-      if (element.parent('.dropdown-menu')) {
-        element.closest('li.dropdown').addClass('active')
-      }
-
-      callback && callback()
-    }
-
-    transition ?
-      $active
-        .one($.support.transition.end, next)
-        .emulateTransitionEnd(150) :
-      next()
-
-    $active.removeClass('in')
-  }
-
-
-  // TAB PLUGIN DEFINITION
-  // =====================
-
-  var old = $.fn.tab
-
-  $.fn.tab = function ( option ) {
-    return this.each(function () {
-      var $this = $(this)
-      var data  = $this.data('bs.tab')
-
-      if (!data) $this.data('bs.tab', (data = new Tab(this)))
-      if (typeof option == 'string') data[option]()
-    })
-  }
-
-  $.fn.tab.Constructor = Tab
-
-
-  // TAB NO CONFLICT
-  // ===============
-
-  $.fn.tab.noConflict = function () {
-    $.fn.tab = old
-    return this
-  }
-
-
-  // TAB DATA-API
-  // ============
-
-  $(document).on('click.bs.tab.data-api', '[data-toggle="tab"], [data-toggle="pill"]', function (e) {
-    e.preventDefault()
-    $(this).tab('show')
-  })
-
-}(jQuery);
-/* ========================================================================
- * Bootstrap: transition.js v3.0.3
- * http://getbootstrap.com/javascript/#transitions
- * ========================================================================
- * Copyright 2013 Twitter, Inc.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- * http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- * ======================================================================== */
-
-
-
-+function ($) { "use strict";
-
-  // CSS TRANSITION SUPPORT (Shoutout: http://www.modernizr.com/)
-  // ============================================================
-
-  function transitionEnd() {
-    var el = document.createElement('bootstrap')
-
-    var transEndEventNames = {
-      'WebkitTransition' : 'webkitTransitionEnd'
-    , 'MozTransition'    : 'transitionend'
-    , 'OTransition'      : 'oTransitionEnd otransitionend'
-    , 'transition'       : 'transitionend'
-    }
-
-    for (var name in transEndEventNames) {
-      if (el.style[name] !== undefined) {
-        return { end: transEndEventNames[name] }
-      }
-    }
-  }
-
-  // http://blog.alexmaccaw.com/css-transitions
-  $.fn.emulateTransitionEnd = function (duration) {
-    var called = false, $el = this
-    $(this).one($.support.transition.end, function () { called = true })
-    var callback = function () { if (!called) $($el).trigger($.support.transition.end) }
-    setTimeout(callback, duration)
-    return this
-  }
-
-  $(function () {
-    $.support.transition = transitionEnd()
-  })
-
-}(jQuery);
-/* ========================================================================
- * Bootstrap: scrollspy.js v3.0.3
- * http://getbootstrap.com/javascript/#scrollspy
- * ========================================================================
- * Copyright 2013 Twitter, Inc.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- * http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- * ======================================================================== */
-
-
-
-+function ($) { "use strict";
-
-  // SCROLLSPY CLASS DEFINITION
-  // ==========================
-
-  function ScrollSpy(element, options) {
-    var href
-    var process  = $.proxy(this.process, this)
-
-    this.$element       = $(element).is('body') ? $(window) : $(element)
-    this.$body          = $('body')
-    this.$scrollElement = this.$element.on('scroll.bs.scroll-spy.data-api', process)
-    this.options        = $.extend({}, ScrollSpy.DEFAULTS, options)
-    this.selector       = (this.options.target
-      || ((href = $(element).attr('href')) && href.replace(/.*(?=#[^\s]+$)/, '')) //strip for ie7
-      || '') + ' .nav li > a'
-    this.offsets        = $([])
-    this.targets        = $([])
-    this.activeTarget   = null
-
-    this.refresh()
-    this.process()
-  }
-
-  ScrollSpy.DEFAULTS = {
-    offset: 10
-  }
-
-  ScrollSpy.prototype.refresh = function () {
-    var offsetMethod = this.$element[0] == window ? 'offset' : 'position'
-
-    this.offsets = $([])
-    this.targets = $([])
-
-    var self     = this
-    var $targets = this.$body
-      .find(this.selector)
-      .map(function () {
-        var $el   = $(this)
-        var href  = $el.data('target') || $el.attr('href')
-        var $href = /^#\w/.test(href) && $(href)
-
-        return ($href
-          && $href.length
-          && [[ $href[offsetMethod]().top + (!$.isWindow(self.$scrollElement.get(0)) && self.$scrollElement.scrollTop()), href ]]) || null
-      })
-      .sort(function (a, b) { return a[0] - b[0] })
-      .each(function () {
-        self.offsets.push(this[0])
-        self.targets.push(this[1])
-      })
-  }
-
-  ScrollSpy.prototype.process = function () {
-    var scrollTop    = this.$scrollElement.scrollTop() + this.options.offset
-    var scrollHeight = this.$scrollElement[0].scrollHeight || this.$body[0].scrollHeight
-    var maxScroll    = scrollHeight - this.$scrollElement.height()
-    var offsets      = this.offsets
-    var targets      = this.targets
-    var activeTarget = this.activeTarget
-    var i
-
-    if (scrollTop >= maxScroll) {
-      return activeTarget != (i = targets.last()[0]) && this.activate(i)
-    }
-
-    for (i = offsets.length; i--;) {
-      activeTarget != targets[i]
-        && scrollTop >= offsets[i]
-        && (!offsets[i + 1] || scrollTop <= offsets[i + 1])
-        && this.activate( targets[i] )
-    }
-  }
-
-  ScrollSpy.prototype.activate = function (target) {
-    this.activeTarget = target
-
-    $(this.selector)
-      .parents('.active')
-      .removeClass('active')
-
-    var selector = this.selector
-      + '[data-target="' + target + '"],'
-      + this.selector + '[href="' + target + '"]'
-
-    var active = $(selector)
-      .parents('li')
-      .addClass('active')
-
-    if (active.parent('.dropdown-menu').length)  {
-      active = active
-        .closest('li.dropdown')
-        .addClass('active')
-    }
-
-    active.trigger('activate.bs.scrollspy')
-  }
-
-
-  // SCROLLSPY PLUGIN DEFINITION
-  // ===========================
-
-  var old = $.fn.scrollspy
-
-  $.fn.scrollspy = function (option) {
-    return this.each(function () {
-      var $this   = $(this)
-      var data    = $this.data('bs.scrollspy')
-      var options = typeof option == 'object' && option
-
-      if (!data) $this.data('bs.scrollspy', (data = new ScrollSpy(this, options)))
-      if (typeof option == 'string') data[option]()
-    })
-  }
-
-  $.fn.scrollspy.Constructor = ScrollSpy
-
-
-  // SCROLLSPY NO CONFLICT
-  // =====================
-
-  $.fn.scrollspy.noConflict = function () {
-    $.fn.scrollspy = old
-    return this
-  }
-
-
-  // SCROLLSPY DATA-API
-  // ==================
-
-  $(window).on('load', function () {
-    $('[data-spy="scroll"]').each(function () {
-      var $spy = $(this)
-      $spy.scrollspy($spy.data())
-    })
-  })
-
-}(jQuery);
-/* ========================================================================
  * Bootstrap: modal.js v3.0.3
  * http://getbootstrap.com/javascript/#modals
  * ========================================================================
@@ -12583,6 +11759,428 @@ if ( typeof module === "object" && module && typeof module.exports === "object" 
   }
 
 }(jQuery);
+/* ========================================================================
+ * Bootstrap: scrollspy.js v3.0.3
+ * http://getbootstrap.com/javascript/#scrollspy
+ * ========================================================================
+ * Copyright 2013 Twitter, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ * ======================================================================== */
+
+
+
++function ($) { "use strict";
+
+  // SCROLLSPY CLASS DEFINITION
+  // ==========================
+
+  function ScrollSpy(element, options) {
+    var href
+    var process  = $.proxy(this.process, this)
+
+    this.$element       = $(element).is('body') ? $(window) : $(element)
+    this.$body          = $('body')
+    this.$scrollElement = this.$element.on('scroll.bs.scroll-spy.data-api', process)
+    this.options        = $.extend({}, ScrollSpy.DEFAULTS, options)
+    this.selector       = (this.options.target
+      || ((href = $(element).attr('href')) && href.replace(/.*(?=#[^\s]+$)/, '')) //strip for ie7
+      || '') + ' .nav li > a'
+    this.offsets        = $([])
+    this.targets        = $([])
+    this.activeTarget   = null
+
+    this.refresh()
+    this.process()
+  }
+
+  ScrollSpy.DEFAULTS = {
+    offset: 10
+  }
+
+  ScrollSpy.prototype.refresh = function () {
+    var offsetMethod = this.$element[0] == window ? 'offset' : 'position'
+
+    this.offsets = $([])
+    this.targets = $([])
+
+    var self     = this
+    var $targets = this.$body
+      .find(this.selector)
+      .map(function () {
+        var $el   = $(this)
+        var href  = $el.data('target') || $el.attr('href')
+        var $href = /^#\w/.test(href) && $(href)
+
+        return ($href
+          && $href.length
+          && [[ $href[offsetMethod]().top + (!$.isWindow(self.$scrollElement.get(0)) && self.$scrollElement.scrollTop()), href ]]) || null
+      })
+      .sort(function (a, b) { return a[0] - b[0] })
+      .each(function () {
+        self.offsets.push(this[0])
+        self.targets.push(this[1])
+      })
+  }
+
+  ScrollSpy.prototype.process = function () {
+    var scrollTop    = this.$scrollElement.scrollTop() + this.options.offset
+    var scrollHeight = this.$scrollElement[0].scrollHeight || this.$body[0].scrollHeight
+    var maxScroll    = scrollHeight - this.$scrollElement.height()
+    var offsets      = this.offsets
+    var targets      = this.targets
+    var activeTarget = this.activeTarget
+    var i
+
+    if (scrollTop >= maxScroll) {
+      return activeTarget != (i = targets.last()[0]) && this.activate(i)
+    }
+
+    for (i = offsets.length; i--;) {
+      activeTarget != targets[i]
+        && scrollTop >= offsets[i]
+        && (!offsets[i + 1] || scrollTop <= offsets[i + 1])
+        && this.activate( targets[i] )
+    }
+  }
+
+  ScrollSpy.prototype.activate = function (target) {
+    this.activeTarget = target
+
+    $(this.selector)
+      .parents('.active')
+      .removeClass('active')
+
+    var selector = this.selector
+      + '[data-target="' + target + '"],'
+      + this.selector + '[href="' + target + '"]'
+
+    var active = $(selector)
+      .parents('li')
+      .addClass('active')
+
+    if (active.parent('.dropdown-menu').length)  {
+      active = active
+        .closest('li.dropdown')
+        .addClass('active')
+    }
+
+    active.trigger('activate.bs.scrollspy')
+  }
+
+
+  // SCROLLSPY PLUGIN DEFINITION
+  // ===========================
+
+  var old = $.fn.scrollspy
+
+  $.fn.scrollspy = function (option) {
+    return this.each(function () {
+      var $this   = $(this)
+      var data    = $this.data('bs.scrollspy')
+      var options = typeof option == 'object' && option
+
+      if (!data) $this.data('bs.scrollspy', (data = new ScrollSpy(this, options)))
+      if (typeof option == 'string') data[option]()
+    })
+  }
+
+  $.fn.scrollspy.Constructor = ScrollSpy
+
+
+  // SCROLLSPY NO CONFLICT
+  // =====================
+
+  $.fn.scrollspy.noConflict = function () {
+    $.fn.scrollspy = old
+    return this
+  }
+
+
+  // SCROLLSPY DATA-API
+  // ==================
+
+  $(window).on('load', function () {
+    $('[data-spy="scroll"]').each(function () {
+      var $spy = $(this)
+      $spy.scrollspy($spy.data())
+    })
+  })
+
+}(jQuery);
+/* ========================================================================
+ * Bootstrap: tab.js v3.0.3
+ * http://getbootstrap.com/javascript/#tabs
+ * ========================================================================
+ * Copyright 2013 Twitter, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ * ======================================================================== */
+
+
+
++function ($) { "use strict";
+
+  // TAB CLASS DEFINITION
+  // ====================
+
+  var Tab = function (element) {
+    this.element = $(element)
+  }
+
+  Tab.prototype.show = function () {
+    var $this    = this.element
+    var $ul      = $this.closest('ul:not(.dropdown-menu)')
+    var selector = $this.data('target')
+
+    if (!selector) {
+      selector = $this.attr('href')
+      selector = selector && selector.replace(/.*(?=#[^\s]*$)/, '') //strip for ie7
+    }
+
+    if ($this.parent('li').hasClass('active')) return
+
+    var previous = $ul.find('.active:last a')[0]
+    var e        = $.Event('show.bs.tab', {
+      relatedTarget: previous
+    })
+
+    $this.trigger(e)
+
+    if (e.isDefaultPrevented()) return
+
+    var $target = $(selector)
+
+    this.activate($this.parent('li'), $ul)
+    this.activate($target, $target.parent(), function () {
+      $this.trigger({
+        type: 'shown.bs.tab'
+      , relatedTarget: previous
+      })
+    })
+  }
+
+  Tab.prototype.activate = function (element, container, callback) {
+    var $active    = container.find('> .active')
+    var transition = callback
+      && $.support.transition
+      && $active.hasClass('fade')
+
+    function next() {
+      $active
+        .removeClass('active')
+        .find('> .dropdown-menu > .active')
+        .removeClass('active')
+
+      element.addClass('active')
+
+      if (transition) {
+        element[0].offsetWidth // reflow for transition
+        element.addClass('in')
+      } else {
+        element.removeClass('fade')
+      }
+
+      if (element.parent('.dropdown-menu')) {
+        element.closest('li.dropdown').addClass('active')
+      }
+
+      callback && callback()
+    }
+
+    transition ?
+      $active
+        .one($.support.transition.end, next)
+        .emulateTransitionEnd(150) :
+      next()
+
+    $active.removeClass('in')
+  }
+
+
+  // TAB PLUGIN DEFINITION
+  // =====================
+
+  var old = $.fn.tab
+
+  $.fn.tab = function ( option ) {
+    return this.each(function () {
+      var $this = $(this)
+      var data  = $this.data('bs.tab')
+
+      if (!data) $this.data('bs.tab', (data = new Tab(this)))
+      if (typeof option == 'string') data[option]()
+    })
+  }
+
+  $.fn.tab.Constructor = Tab
+
+
+  // TAB NO CONFLICT
+  // ===============
+
+  $.fn.tab.noConflict = function () {
+    $.fn.tab = old
+    return this
+  }
+
+
+  // TAB DATA-API
+  // ============
+
+  $(document).on('click.bs.tab.data-api', '[data-toggle="tab"], [data-toggle="pill"]', function (e) {
+    e.preventDefault()
+    $(this).tab('show')
+  })
+
+}(jQuery);
+/* ========================================================================
+ * Bootstrap: affix.js v3.0.3
+ * http://getbootstrap.com/javascript/#affix
+ * ========================================================================
+ * Copyright 2013 Twitter, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ * ======================================================================== */
+
+
+
++function ($) { "use strict";
+
+  // AFFIX CLASS DEFINITION
+  // ======================
+
+  var Affix = function (element, options) {
+    this.options = $.extend({}, Affix.DEFAULTS, options)
+    this.$window = $(window)
+      .on('scroll.bs.affix.data-api', $.proxy(this.checkPosition, this))
+      .on('click.bs.affix.data-api',  $.proxy(this.checkPositionWithEventLoop, this))
+
+    this.$element = $(element)
+    this.affixed  =
+    this.unpin    = null
+
+    this.checkPosition()
+  }
+
+  Affix.RESET = 'affix affix-top affix-bottom'
+
+  Affix.DEFAULTS = {
+    offset: 0
+  }
+
+  Affix.prototype.checkPositionWithEventLoop = function () {
+    setTimeout($.proxy(this.checkPosition, this), 1)
+  }
+
+  Affix.prototype.checkPosition = function () {
+    if (!this.$element.is(':visible')) return
+
+    var scrollHeight = $(document).height()
+    var scrollTop    = this.$window.scrollTop()
+    var position     = this.$element.offset()
+    var offset       = this.options.offset
+    var offsetTop    = offset.top
+    var offsetBottom = offset.bottom
+
+    if (typeof offset != 'object')         offsetBottom = offsetTop = offset
+    if (typeof offsetTop == 'function')    offsetTop    = offset.top()
+    if (typeof offsetBottom == 'function') offsetBottom = offset.bottom()
+
+    var affix = this.unpin   != null && (scrollTop + this.unpin <= position.top) ? false :
+                offsetBottom != null && (position.top + this.$element.height() >= scrollHeight - offsetBottom) ? 'bottom' :
+                offsetTop    != null && (scrollTop <= offsetTop) ? 'top' : false
+
+    if (this.affixed === affix) return
+    if (this.unpin) this.$element.css('top', '')
+
+    this.affixed = affix
+    this.unpin   = affix == 'bottom' ? position.top - scrollTop : null
+
+    this.$element.removeClass(Affix.RESET).addClass('affix' + (affix ? '-' + affix : ''))
+
+    if (affix == 'bottom') {
+      this.$element.offset({ top: document.body.offsetHeight - offsetBottom - this.$element.height() })
+    }
+  }
+
+
+  // AFFIX PLUGIN DEFINITION
+  // =======================
+
+  var old = $.fn.affix
+
+  $.fn.affix = function (option) {
+    return this.each(function () {
+      var $this   = $(this)
+      var data    = $this.data('bs.affix')
+      var options = typeof option == 'object' && option
+
+      if (!data) $this.data('bs.affix', (data = new Affix(this, options)))
+      if (typeof option == 'string') data[option]()
+    })
+  }
+
+  $.fn.affix.Constructor = Affix
+
+
+  // AFFIX NO CONFLICT
+  // =================
+
+  $.fn.affix.noConflict = function () {
+    $.fn.affix = old
+    return this
+  }
+
+
+  // AFFIX DATA-API
+  // ==============
+
+  $(window).on('load', function () {
+    $('[data-spy="affix"]').each(function () {
+      var $spy = $(this)
+      var data = $spy.data()
+
+      data.offset = data.offset || {}
+
+      if (data.offsetBottom) data.offset.bottom = data.offsetBottom
+      if (data.offsetTop)    data.offset.top    = data.offsetTop
+
+      $spy.affix(data)
+    })
+  })
+
+}(jQuery);
 
 
 
@@ -12595,6 +12193,416 @@ if ( typeof module === "object" && module && typeof module.exports === "object" 
 
 
 
+(function() {
+  var CSRFToken, anchoredLink, assetsChanged, browserCompatibleDocumentParser, browserIsntBuggy, browserSupportsPushState, cacheCurrentPage, changePage, constrainPageCacheTo, createDocument, crossOriginLink, currentState, executeScriptTags, extractLink, extractTitleAndBody, extractTrackAssets, fetchHistory, fetchReplacement, handleClick, ignoreClick, initializeTurbolinks, initialized, installClickHandlerLast, intersection, invalidContent, loadedAssets, noTurbolink, nonHtmlLink, nonStandardClick, pageCache, recallScrollPosition, referer, reflectNewUrl, reflectRedirectedUrl, rememberCurrentState, rememberCurrentUrl, rememberInitialPage, removeHash, removeNoscriptTags, requestMethod, requestMethodIsSafe, resetScrollPosition, targetLink, triggerEvent, visit, xhr, _ref,
+    __hasProp = {}.hasOwnProperty,
+    __indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
+
+  initialized = false;
+
+  currentState = null;
+
+  referer = document.location.href;
+
+  loadedAssets = null;
+
+  pageCache = {};
+
+  createDocument = null;
+
+  requestMethod = ((_ref = document.cookie.match(/request_method=(\w+)/)) != null ? _ref[1].toUpperCase() : void 0) || '';
+
+  xhr = null;
+
+  visit = function(url) {
+    if (browserSupportsPushState && browserIsntBuggy) {
+      cacheCurrentPage();
+      reflectNewUrl(url);
+      return fetchReplacement(url);
+    } else {
+      return document.location.href = url;
+    }
+  };
+
+  fetchReplacement = function(url) {
+    var safeUrl,
+      _this = this;
+    triggerEvent('page:fetch');
+    safeUrl = removeHash(url);
+    if (xhr != null) {
+      xhr.abort();
+    }
+    xhr = new XMLHttpRequest;
+    xhr.open('GET', safeUrl, true);
+    xhr.setRequestHeader('Accept', 'text/html, application/xhtml+xml, application/xml');
+    xhr.setRequestHeader('X-XHR-Referer', referer);
+    xhr.onload = function() {
+      var doc;
+      triggerEvent('page:receive');
+      if (invalidContent(xhr) || assetsChanged((doc = createDocument(xhr.responseText)))) {
+        return document.location.reload();
+      } else {
+        changePage.apply(null, extractTitleAndBody(doc));
+        reflectRedirectedUrl(xhr);
+        if (document.location.hash) {
+          document.location.href = document.location.href;
+        } else {
+          resetScrollPosition();
+        }
+        return triggerEvent('page:load');
+      }
+    };
+    xhr.onloadend = function() {
+      return xhr = null;
+    };
+    xhr.onabort = function() {
+      return rememberCurrentUrl();
+    };
+    xhr.onerror = function() {
+      return document.location.href = url;
+    };
+    return xhr.send();
+  };
+
+  fetchHistory = function(state) {
+    var page;
+    cacheCurrentPage();
+    if (page = pageCache[state.position]) {
+      if (xhr != null) {
+        xhr.abort();
+      }
+      changePage(page.title, page.body);
+      recallScrollPosition(page);
+      return triggerEvent('page:restore');
+    } else {
+      return fetchReplacement(document.location.href);
+    }
+  };
+
+  cacheCurrentPage = function() {
+    rememberInitialPage();
+    pageCache[currentState.position] = {
+      url: document.location.href,
+      body: document.body,
+      title: document.title,
+      positionY: window.pageYOffset,
+      positionX: window.pageXOffset
+    };
+    return constrainPageCacheTo(10);
+  };
+
+  constrainPageCacheTo = function(limit) {
+    var key, value;
+    for (key in pageCache) {
+      if (!__hasProp.call(pageCache, key)) continue;
+      value = pageCache[key];
+      if (key <= currentState.position - limit) {
+        pageCache[key] = null;
+      }
+    }
+  };
+
+  changePage = function(title, body, csrfToken, runScripts) {
+    document.title = title;
+    document.documentElement.replaceChild(body, document.body);
+    if (csrfToken != null) {
+      CSRFToken.update(csrfToken);
+    }
+    removeNoscriptTags();
+    if (runScripts) {
+      executeScriptTags();
+    }
+    currentState = window.history.state;
+    return triggerEvent('page:change');
+  };
+
+  executeScriptTags = function() {
+    var attr, copy, nextSibling, parentNode, script, scripts, _i, _j, _len, _len1, _ref1, _ref2;
+    scripts = Array.prototype.slice.call(document.body.getElementsByTagName('script'));
+    for (_i = 0, _len = scripts.length; _i < _len; _i++) {
+      script = scripts[_i];
+      if (!((_ref1 = script.type) === '' || _ref1 === 'text/javascript')) {
+        continue;
+      }
+      copy = document.createElement('script');
+      _ref2 = script.attributes;
+      for (_j = 0, _len1 = _ref2.length; _j < _len1; _j++) {
+        attr = _ref2[_j];
+        copy.setAttribute(attr.name, attr.value);
+      }
+      copy.appendChild(document.createTextNode(script.innerHTML));
+      parentNode = script.parentNode, nextSibling = script.nextSibling;
+      parentNode.removeChild(script);
+      parentNode.insertBefore(copy, nextSibling);
+    }
+  };
+
+  removeNoscriptTags = function() {
+    var noscript, noscriptTags, _i, _len;
+    noscriptTags = Array.prototype.slice.call(document.body.getElementsByTagName('noscript'));
+    for (_i = 0, _len = noscriptTags.length; _i < _len; _i++) {
+      noscript = noscriptTags[_i];
+      noscript.parentNode.removeChild(noscript);
+    }
+  };
+
+  reflectNewUrl = function(url) {
+    if (url !== document.location.href) {
+      referer = document.location.href;
+      return window.history.pushState({
+        turbolinks: true,
+        position: currentState.position + 1
+      }, '', url);
+    }
+  };
+
+  reflectRedirectedUrl = function(xhr) {
+    var location;
+    if ((location = xhr.getResponseHeader('X-XHR-Current-Location')) && location !== document.location.pathname + document.location.search) {
+      return window.history.replaceState(currentState, '', location + document.location.hash);
+    }
+  };
+
+  rememberCurrentUrl = function() {
+    return window.history.replaceState({
+      turbolinks: true,
+      position: Date.now()
+    }, '', document.location.href);
+  };
+
+  rememberCurrentState = function() {
+    return currentState = window.history.state;
+  };
+
+  rememberInitialPage = function() {
+    if (!initialized) {
+      rememberCurrentUrl();
+      rememberCurrentState();
+      createDocument = browserCompatibleDocumentParser();
+      return initialized = true;
+    }
+  };
+
+  recallScrollPosition = function(page) {
+    return window.scrollTo(page.positionX, page.positionY);
+  };
+
+  resetScrollPosition = function() {
+    return window.scrollTo(0, 0);
+  };
+
+  removeHash = function(url) {
+    var link;
+    link = url;
+    if (url.href == null) {
+      link = document.createElement('A');
+      link.href = url;
+    }
+    return link.href.replace(link.hash, '');
+  };
+
+  triggerEvent = function(name) {
+    var event;
+    event = document.createEvent('Events');
+    event.initEvent(name, true, true);
+    return document.dispatchEvent(event);
+  };
+
+  invalidContent = function(xhr) {
+    return !xhr.getResponseHeader('Content-Type').match(/^(?:text\/html|application\/xhtml\+xml|application\/xml)(?:;|$)/);
+  };
+
+  extractTrackAssets = function(doc) {
+    var node, _i, _len, _ref1, _results;
+    _ref1 = doc.head.childNodes;
+    _results = [];
+    for (_i = 0, _len = _ref1.length; _i < _len; _i++) {
+      node = _ref1[_i];
+      if ((typeof node.getAttribute === "function" ? node.getAttribute('data-turbolinks-track') : void 0) != null) {
+        _results.push(node.src || node.href);
+      }
+    }
+    return _results;
+  };
+
+  assetsChanged = function(doc) {
+    var fetchedAssets;
+    loadedAssets || (loadedAssets = extractTrackAssets(document));
+    fetchedAssets = extractTrackAssets(doc);
+    return fetchedAssets.length !== loadedAssets.length || intersection(fetchedAssets, loadedAssets).length !== loadedAssets.length;
+  };
+
+  intersection = function(a, b) {
+    var value, _i, _len, _ref1, _results;
+    if (a.length > b.length) {
+      _ref1 = [b, a], a = _ref1[0], b = _ref1[1];
+    }
+    _results = [];
+    for (_i = 0, _len = a.length; _i < _len; _i++) {
+      value = a[_i];
+      if (__indexOf.call(b, value) >= 0) {
+        _results.push(value);
+      }
+    }
+    return _results;
+  };
+
+  extractTitleAndBody = function(doc) {
+    var title;
+    title = doc.querySelector('title');
+    return [title != null ? title.textContent : void 0, doc.body, CSRFToken.get(doc).token, 'runScripts'];
+  };
+
+  CSRFToken = {
+    get: function(doc) {
+      var tag;
+      if (doc == null) {
+        doc = document;
+      }
+      return {
+        node: tag = doc.querySelector('meta[name="csrf-token"]'),
+        token: tag != null ? typeof tag.getAttribute === "function" ? tag.getAttribute('content') : void 0 : void 0
+      };
+    },
+    update: function(latest) {
+      var current;
+      current = this.get();
+      if ((current.token != null) && (latest != null) && current.token !== latest) {
+        return current.node.setAttribute('content', latest);
+      }
+    }
+  };
+
+  browserCompatibleDocumentParser = function() {
+    var createDocumentUsingDOM, createDocumentUsingParser, createDocumentUsingWrite, e, testDoc, _ref1;
+    createDocumentUsingParser = function(html) {
+      return (new DOMParser).parseFromString(html, 'text/html');
+    };
+    createDocumentUsingDOM = function(html) {
+      var doc;
+      doc = document.implementation.createHTMLDocument('');
+      doc.documentElement.innerHTML = html;
+      return doc;
+    };
+    createDocumentUsingWrite = function(html) {
+      var doc;
+      doc = document.implementation.createHTMLDocument('');
+      doc.open('replace');
+      doc.write(html);
+      doc.close();
+      return doc;
+    };
+    try {
+      if (window.DOMParser) {
+        testDoc = createDocumentUsingParser('<html><body><p>test');
+        return createDocumentUsingParser;
+      }
+    } catch (_error) {
+      e = _error;
+      testDoc = createDocumentUsingDOM('<html><body><p>test');
+      return createDocumentUsingDOM;
+    } finally {
+      if ((testDoc != null ? (_ref1 = testDoc.body) != null ? _ref1.childNodes.length : void 0 : void 0) !== 1) {
+        return createDocumentUsingWrite;
+      }
+    }
+  };
+
+  installClickHandlerLast = function(event) {
+    if (!event.defaultPrevented) {
+      document.removeEventListener('click', handleClick, false);
+      return document.addEventListener('click', handleClick, false);
+    }
+  };
+
+  handleClick = function(event) {
+    var link;
+    if (!event.defaultPrevented) {
+      link = extractLink(event);
+      if (link.nodeName === 'A' && !ignoreClick(event, link)) {
+        visit(link.href);
+        return event.preventDefault();
+      }
+    }
+  };
+
+  extractLink = function(event) {
+    var link;
+    link = event.target;
+    while (!(!link.parentNode || link.nodeName === 'A')) {
+      link = link.parentNode;
+    }
+    return link;
+  };
+
+  crossOriginLink = function(link) {
+    return location.protocol !== link.protocol || location.host !== link.host;
+  };
+
+  anchoredLink = function(link) {
+    return ((link.hash && removeHash(link)) === removeHash(location)) || (link.href === location.href + '#');
+  };
+
+  nonHtmlLink = function(link) {
+    var url;
+    url = removeHash(link);
+    return url.match(/\.[a-z]+(\?.*)?$/g) && !url.match(/\.html?(\?.*)?$/g);
+  };
+
+  noTurbolink = function(link) {
+    var ignore;
+    while (!(ignore || link === document)) {
+      ignore = link.getAttribute('data-no-turbolink') != null;
+      link = link.parentNode;
+    }
+    return ignore;
+  };
+
+  targetLink = function(link) {
+    return link.target.length !== 0;
+  };
+
+  nonStandardClick = function(event) {
+    return event.which > 1 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey;
+  };
+
+  ignoreClick = function(event, link) {
+    return crossOriginLink(link) || anchoredLink(link) || nonHtmlLink(link) || noTurbolink(link) || targetLink(link) || nonStandardClick(event);
+  };
+
+  initializeTurbolinks = function() {
+    document.addEventListener('click', installClickHandlerLast, true);
+    return window.addEventListener('popstate', function(event) {
+      var _ref1;
+      if ((_ref1 = event.state) != null ? _ref1.turbolinks : void 0) {
+        return fetchHistory(event.state);
+      }
+    }, false);
+  };
+
+  browserSupportsPushState = window.history && window.history.pushState && window.history.replaceState && window.history.state !== void 0;
+
+  browserIsntBuggy = !navigator.userAgent.match(/CriOS\//);
+
+  requestMethodIsSafe = requestMethod === 'GET' || requestMethod === '';
+
+  if (browserSupportsPushState && browserIsntBuggy && requestMethodIsSafe) {
+    initializeTurbolinks();
+  }
+
+  this.Turbolinks = {
+    visit: visit
+  };
+
+}).call(this);
+(function() {
+
+
+}).call(this);
+(function() {
+
+
+}).call(this);
 (function() {
 
 
@@ -12617,5 +12625,4 @@ if ( typeof module === "object" && module && typeof module.exports === "object" 
 
 
 
-$('.dropdown-toggle').dropdown()  
 ;

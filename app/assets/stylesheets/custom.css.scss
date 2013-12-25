@@ -1,9 +1,10 @@
-@import "bootstrap";
+@import "twitter/bootstrap";
+
 
 $lightGray: #999;
 $grayLighter: #f1f1f1;
 $grayLight: #949494;
-
+$grayMediumLight: #eaeaea;
 // Fixes
 
 div .normal {
@@ -211,6 +212,35 @@ background-color: #EEB4B4;
   }
 }
 
+.stats {
+  overflow: auto;
+  a {
+    float: left;
+    padding: 0 10px;
+    border-left: 1px solid $grayLighter;
+    color: gray;
+    &:first-child {
+      padding-left: 0;
+      border: 0;
+    }
+    &:hover {
+      text-decoration: none;
+      color: blue;
+    }
+  }
+  strong {
+    display: block;
+  }
+}
+
+.user_avatars {
+  overflow: auto;
+  margin-top: 10px;
+  .gravatar {
+    margin: 1px 1px;
+  }
+}
+
 
 /* microposts */
 
@@ -241,12 +271,8 @@ aside {
   }
 }
 
-//Test
-@media (min-width: 992px) {
-  .col-md-12, .col-md-11, .col-md-10, .col-md-9, .col-md-8, .col-md-7, .col-md-6, .col-md-5, .col-md-4, .col-md-3, .col-md-2, .col-md-1 {
-    float: none; 
-    margin:0 auto;
-  }
+.oddpost {
+  background-color:#f1f1f1;
 }
 
 

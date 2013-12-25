@@ -1,7 +1,7 @@
 class UsersController < ApplicationController
 
   # => Must Sign in before you can visit page Edit or use Update action 
-  before_action :signed_in_user, only: [:edit, :update, :index, :destroy]  # => special signed_in_user method is created below
+  before_action :signed_in_user, only: [:edit, :update, :index, :destroy, :following, :followers]  # => special signed_in_user method is created below
   before_action :correct_user,   only: [:edit, :update] # => Also eliminates the need for edit method code
   before_action :admin_user,     only: :destroy
 
@@ -46,6 +46,20 @@ class UsersController < ApplicationController
     User.find(params[:id]).destroy
     flash[:success] = "User deleted."
     redirect_to users_url
+  end
+
+  def following
+    @title = "Following"
+    @user = User.find(params[:id])
+    @users = @user.followed_users.paginate(page: params[:page])
+    render 'show_follow'
+  end
+
+  def followers   
+    @title = "Followers"
+    @user = User.find(params[:id])
+    @users = @user.followers.paginate(page: params[:page])
+    render 'show_follow'
   end
 
 
