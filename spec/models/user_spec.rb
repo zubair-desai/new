@@ -151,6 +151,12 @@ describe User do
   			@user.microposts.should == [newer_micropost, older_micropost] #user.microposts is an array, so this compared that array
   		end
 
+  		it "should include the name of the micrpost author" do
+  			
+
+  		end
+
+
   		it "should destroy associated microposts" do
   			microposts = @user.microposts
   			@user.destroy
@@ -164,9 +170,22 @@ describe User do
   			 FactoryGirl.create(:micropost, user: FactoryGirl.create(:user)) 
   			end
 
+  			let(:followed_user) { FactoryGirl.create(:user)}
+
+  			before do
+  				@user.follow!(followed_user)
+  				3.times { followed_user.microposts.create!(content: "Lorem ipsum")}
+  			end
+
   			its(:feed) { should include(older_micropost)}
   			its(:feed) { should include(newer_micropost)}
   			its(:feed) { should_not include(unfollowed_post)}
+
+  			its(:feed) do
+  				followed_user.microposts.each do |micropost|
+  					should include(micropost)
+  				end
+  			end
 		end
 	end
 

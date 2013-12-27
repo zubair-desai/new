@@ -38,9 +38,9 @@ class User < ActiveRecord::Base
 
 
 	def feed
-		#This is only a proto feed.
-		microposts #self.microposts is not needed because we're not doing an assignment
-		
+		#microposts # => self.microposts is not needed because we're not doing an assignment
+		Micropost.from_users_followed_by(self)  #class method is defined in micropost.rb
+												# => self is Microposts object/table, not User table
 	end
 
 # =>  does not belong here?
